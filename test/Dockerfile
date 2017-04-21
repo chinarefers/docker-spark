@@ -1,11 +1,11 @@
-# docker spark
-# docker build -t docker-spark:1.0 .
+# docker HADOOP
+# docker build -t docker-HADOOP:1.0 .
 FROM    openjdk:8-jre-alpine
 
 MAINTAINER wangxiaolei(王小雷) “http://blog.csdn.net/dream_an https://github.com/wxiaolei”
 
-RUN echo  "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.4/community/"  > /etc/apk/repositories
-RUN echo  "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.4/main/"  >> /etc/apk/repositories
+RUN echo  "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.5/community/"  > /etc/apk/repositories
+RUN echo  "https://mirrors.tuna.tsinghua.edu.cn/alpine/v3.5/main/"  >> /etc/apk/repositories
 RUN apk update
 RUN apk add --no-cache \
         bash \
@@ -27,18 +27,23 @@ RUN chown root:root /root/.ssh/config
 
 
 ARG GPG_KEY=40935508C4A60BFA228526FB38C14CBE28E97588
-ARG DISTRO_NAME=docker-spark-2.1.0
+ARG DISTRO_NAME=docker-hadoop-2.7.3
+
+ENV HADOOP_HOME=/usr/local/hadoop-2.7.3
 
 
-ENV SPARK_USER=SPARK \
-    SPARK_CONF_DIR=/conf \
-    SPARK_DATA_DIR=/data \
-    SPARK_LOG_DIR=/logs
 
-# Add a user and make dirs
-RUN set -x \
-    && adduser -D "$SPARK_USER" \
-    && mkdir -p "$SPARK_CONF_DIR" "$SPARK_DATA_DIR" "$SPARK_LOG_DIR" \
-    && chown -R "$SPARK_USER:$SPARK_USER" "$SPARK_CONF_DIR" "$SPARK_DATA_DIR" "$SPARK_LOG_DIR"
 
-CMD bash
+RUN mkdir -p $HADOOP_HOME
+COPY hadoop-2.7.3 $HADOOP_HOME
+
+RUN $HADOOP_HOME/bin/hdfs namenode -format
+RUN $HADOOP_HOME/sbin/start-dfs.sh
+
+EXPOSE 50010 50020 50070 50075 50090 8020 9000
+# Mapred ports
+EXPOSE 10020 19888
+#Yarn ports
+EXPOSE 8030 8031 8032 8033 8040 8042 8088
+#Other ports
+EXPOSE 49707 2122
